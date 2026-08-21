@@ -1,0 +1,1 @@
+- [OpenAPI/Zod compatibility](openapi-zod-compatibility.md) — avoid generated `zod.int()` unless the workspace Zod version supports it.

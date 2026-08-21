@@ -1,0 +1,236 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Executive overview
+  - name: risks
+    description: Psychosocial risk analysis
+  - name: actions
+    description: Action plan management
+  - name: assessment
+    description: Anonymous employee assessment
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get executive dashboard
+      responses:
+        "200":
+          description: Executive dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dashboard"
+  /risks:
+    get:
+      operationId: getRisks
+      tags: [risks]
+      summary: List psychosocial risks
+      responses:
+        "200":
+          description: Risk factors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Risk"
+  /action-plans:
+    get:
+      operationId: getActionPlans
+      tags: [actions]
+      summary: List action plans
+      responses:
+        "200":
+          description: Action plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActionPlan"
+    post:
+      operationId: createActionPlan
+      tags: [actions]
+      summary: Create an action plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionPlanInput"
+      responses:
+        "201":
+          description: Created action plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionPlan"
+  /assessment:
+    get:
+      operationId: getAssessment
+      tags: [assessment]
+      summary: Get the active anonymous assessment
+      responses:
+        "200":
+          description: Active assessment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assessment"
+  /assessment/responses:
+    post:
+      operationId: submitAssessmentResponse
+      tags: [assessment]
+      summary: Submit an anonymous assessment response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentResponseInput"
+      responses:
+        "201":
+          description: Response accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResponse"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Dashboard:
+      type: object
+      required: [companyName, cycleLabel, overallScore, responseRate, employeesEvaluated, sectorsEvaluated, criticalRisks, pendingActions, trend, highlights]
+      properties:
+        companyName: { type: string }
+        cycleLabel: { type: string }
+        overallScore: { type: number }
+        responseRate: { type: number }
+        employeesEvaluated: { type: number }
+        sectorsEvaluated: { type: number }
+        criticalRisks: { type: number }
+        pendingActions: { type: number }
+        trend:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrendPoint"
+        highlights:
+          type: array
+          items:
+            $ref: "#/components/schemas/Insight"
+    TrendPoint:
+      type: object
+      required: [label, score]
+      properties:
+        label: { type: string }
+        score: { type: number }
+    Insight:
+      type: object
+      required: [title, context, evidence, recommendation, severity]
+      properties:
+        title: { type: string }
+        context: { type: string }
+        evidence: { type: string }
+        recommendation: { type: string }
+        severity:
+          type: string
+          enum: [healthy, attention, high, critical, neutral]
+    Risk:
+      type: object
+      required: [id, factor, sector, probability, severity, exposure, trend, status, recommendation]
+      properties:
+        id: { type: number }
+        factor: { type: string }
+        sector: { type: string }
+        probability: { type: number, description: "Scale from 1 to 5" }
+        severity: { type: number, description: "Scale from 1 to 5" }
+        exposure: { type: string }
+        trend: { type: string, enum: [up, down, stable] }
+        status: { type: string, enum: [healthy, attention, high, critical, neutral] }
+        recommendation: { type: string }
+    ActionPlan:
+      type: object
+      required: [id, title, owner, dueDate, status, priority, source]
+      properties:
+        id: { type: number }
+        title: { type: string }
+        owner: { type: string }
+        dueDate: { type: string }
+        status: { type: string, enum: [planned, in_progress, done] }
+        priority: { type: string, enum: [low, medium, high] }
+        source: { type: string }
+    ActionPlanInput:
+      type: object
+      required: [title, owner, dueDate, priority, source]
+      properties:
+        title: { type: string, minLength: 1 }
+        owner: { type: string, minLength: 1 }
+        dueDate: { type: string, minLength: 1 }
+        priority: { type: string, enum: [low, medium, high] }
+        source: { type: string, minLength: 1 }
+    Assessment:
+      type: object
+      required: [id, title, description, privacyNote, questions]
+      properties:
+        id: { type: number }
+        title: { type: string }
+        description: { type: string }
+        privacyNote: { type: string }
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssessmentQuestion"
+    AssessmentQuestion:
+      type: object
+      required: [id, text, options]
+      properties:
+        id: { type: number }
+        text: { type: string }
+        options:
+          type: array
+          items: { type: string }
+    AssessmentResponseInput:
+      type: object
+      required: [assessmentId, answers]
+      properties:
+        assessmentId: { type: number }
+        answers:
+          type: object
+          additionalProperties: { type: string }
+    AssessmentResponse:
+      type: object
+      required: [accepted, message]
+      properties:
+        accepted: { type: boolean }
+        message: { type: string }
+

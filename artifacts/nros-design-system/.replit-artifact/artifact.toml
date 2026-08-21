@@ -1,0 +1,19 @@
+kind = "design-system"
+previewPath = "/nros-design-system/"
+title = "NROS Design System"
+description = "Design system for the NROS psychosocial risk and organizational wellbeing platform."
+version = "1.0.0"
+id = "artifacts/nros-design-system"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/nros-design-system/" ]
+localPort = 18833
+
+[services.development]
+run = "pnpm --filter @workspace/nros-design-system run dev"
+
+[services.env]
+PORT = "18833"
+BASE_PATH = "/nros-design-system/"
