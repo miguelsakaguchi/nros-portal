@@ -1,1 +1,2 @@
 - [OpenAPI/Zod compatibility](openapi-zod-compatibility.md) — avoid generated `zod.int()` unless the workspace Zod version supports it.
+- [GitHub push via Git Data API](github-push-via-api.md) — push to GitHub via connectors SDK when raw token is unavailable; init repo via Contents API first to avoid 409 on empty repos.

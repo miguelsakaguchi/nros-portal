@@ -9,6 +9,7 @@ import {
   SubmitAssessmentResponseBody,
   SubmitAssessmentResponseResponse,
 } from "@workspace/api-zod";
+import { requireAuth } from "../auth";
 
 const router: IRouter = Router();
 
@@ -84,6 +85,23 @@ const assessment = {
   ],
 };
 
+router.get("/assessment", (_req, res) => {
+  res.json(GetAssessmentResponse.parse(assessment));
+});
+
+router.post("/assessment/responses", (req, res) => {
+  const input = SubmitAssessmentResponseBody.parse(req.body);
+  req.log.info({ assessmentId: input.assessmentId }, "Anonymous assessment response accepted");
+  res.status(201).json(
+    SubmitAssessmentResponseResponse.parse({
+      accepted: true,
+      message: "Sua resposta foi registrada com segurança. Obrigado por contribuir.",
+    }),
+  );
+});
+
+router.use(requireAuth);
+
 router.get("/dashboard", (_req, res) => {
   res.json(GetDashboardResponse.parse(dashboard));
 });
@@ -105,21 +123,6 @@ router.post("/action-plans", (req, res) => {
   };
   actionPlans = [created, ...actionPlans];
   res.status(201).json(CreateActionPlanResponse.parse(created));
-});
-
-router.get("/assessment", (_req, res) => {
-  res.json(GetAssessmentResponse.parse(assessment));
-});
-
-router.post("/assessment/responses", (req, res) => {
-  const input = SubmitAssessmentResponseBody.parse(req.body);
-  req.log.info({ assessmentId: input.assessmentId }, "Anonymous assessment response accepted");
-  res.status(201).json(
-    SubmitAssessmentResponseResponse.parse({
-      accepted: true,
-      message: "Sua resposta foi registrada com segurança. Obrigado por contribuir.",
-    }),
-  );
 });
 
 export default router;

@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
-import { Activity, ClipboardCheck, FileText, LayoutDashboard, ListChecks, Menu, ShieldCheck } from "lucide-react";
+import { Activity, ClipboardCheck, FileText, LayoutDashboard, ListChecks, LogOut, Menu, ShieldCheck } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@workspace/nros-design-system/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@workspace/nros-design-system/components/ui/sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@workspace/nros-design-system/components/ui/avatar";
+import { useAuth } from "@/auth/AuthContext";
 
 const links = [
   { href: "/", label: "Visão geral", icon: LayoutDashboard },
@@ -22,6 +24,41 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function PortalShell({ children }: { children: ReactNode }) {
+  const { user, signOut } = useAuth();
+  if (!user) return null;
+
+  const initials = user.name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const account = (
+    <div className="flex items-center gap-3">
+      <div className="hidden text-right sm:block">
+        <span className="block max-w-48 truncate text-sm font-medium">{user.name}</span>
+        <span className="block max-w-48 truncate text-xs text-muted-foreground">{user.email}</span>
+      </div>
+      <Avatar className="size-9">
+        {user.picture && <AvatarImage src={user.picture} alt="" />}
+        <AvatarFallback className="bg-secondary text-sm font-semibold text-secondary-foreground">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => void signOut()}
+        aria-label="Sair"
+        title="Sair"
+        data-testid="button-sign-out"
+      >
+        <LogOut />
+      </Button>
+    </div>
+  );
+
   return <div className="min-h-screen bg-background">
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-sidebar px-5 py-6 text-sidebar-foreground md:flex">
       <Link href="/" className="mb-10 flex items-center gap-3" data-testid="link-logo">
@@ -39,7 +76,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b bg-background/95 px-4 backdrop-blur md:px-8">
         <div className="flex items-center gap-3 md:hidden"><Sheet><SheetTrigger asChild><Button variant="ghost" size="icon" data-testid="button-open-menu"><Menu /></Button></SheetTrigger><SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground"><div className="mb-8 flex items-center gap-3 text-sidebar-foreground"><span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><ShieldCheck className="size-5" /></span><span className="text-xl font-semibold">NROS</span></div><NavItems /></SheetContent></Sheet><span className="font-semibold">NROS</span></div>
         <div className="hidden text-sm text-muted-foreground md:block">Inteligência em saúde organizacional</div>
-        <div className="flex items-center gap-3"><span className="hidden text-right sm:block"><span className="block text-sm font-medium">Mariana Costa</span><span className="block text-xs text-muted-foreground">SST · Administradora</span></span><span className="flex size-9 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground">MC</span></div>
+         {account}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-7 md:px-8 md:py-10">{children}</main>
     </div>

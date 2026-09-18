@@ -5,6 +5,12 @@ import { Toaster } from '@workspace/nros-design-system/components/ui/toaster';
 import { TooltipProvider } from '@workspace/nros-design-system/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import { PortalShell } from '@/components/PortalShell';
+import {
+  SessionErrorScreen,
+  SessionLoadingScreen,
+  SignInScreen,
+} from '@/components/AuthScreens';
+import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { DashboardPage } from '@/pages/dashboard';
 import { RisksPage } from '@/pages/riscos';
 import { PlansPage } from '@/pages/planos';
@@ -20,20 +26,41 @@ import {
 const queryClient = new QueryClient();
 
 function Router() {
+  const [location] = useLocation();
+
+  if (location === "/avaliacao") {
+    return (
+      <RoutedErrorBoundary>
+        <AssessmentPage />
+      </RoutedErrorBoundary>
+    );
+  }
+
   return (
-    // Keep a shared shell (sidebar, navbar) outside the boundary so it
-    // survives a page crash.
-    <RoutedErrorBoundary>
-      <PortalShell><Switch>
-        <Route path="/" component={DashboardPage} />
-        <Route path="/riscos" component={RisksPage} />
-        <Route path="/plano-de-acao" component={PlansPage} />
-        <Route path="/avaliacao" component={AssessmentPage} />
-        <Route path="/relatorios" component={ReportsPage} />
-        <Route component={NotFound} />
-      </Switch></PortalShell>
-    </RoutedErrorBoundary>
+    <AuthProvider>
+      <AuthGate>
+        <RoutedErrorBoundary>
+          <PortalShell>
+            <Switch>
+              <Route path="/" component={DashboardPage} />
+              <Route path="/riscos" component={RisksPage} />
+              <Route path="/plano-de-acao" component={PlansPage} />
+              <Route path="/relatorios" component={ReportsPage} />
+              <Route component={NotFound} />
+            </Switch>
+          </PortalShell>
+        </RoutedErrorBoundary>
+      </AuthGate>
+    </AuthProvider>
   );
+}
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { user, isLoading, error } = useAuth();
+  if (isLoading) return <SessionLoadingScreen />;
+  if (error) return <SessionErrorScreen />;
+  if (!user) return <SignInScreen />;
+  return children;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
